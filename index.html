@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>0626 聚餐點餐</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f4f0;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: #1a1a1a;
+      color: #fff;
+      padding: 1.25rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header h1 {
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .header-summary {
+      font-size: 13px;
+      color: #aaa;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 1.25rem 1rem 6rem;
+    }
+
+    .top-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 1.25rem;
+    }
+
+    .field-label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+
+    input[type="text"],
+    select,
+    textarea {
+      width: 100%;
+      font-size: 15px;
+      padding: 9px 12px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      background: #fff;
+      color: #1a1a1a;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="text"]:focus,
+    select:focus,
+    textarea:focus {
+      border-color: #888;
+    }
+
+    textarea {
+      resize: vertical;
+      font-size: 14px;
+    }
+
+    .section {
+      background: #fff;
+      border-radius: 14px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: #555;
+      padding: 12px 16px 10px;
+      border-bottom: 1px solid #f0efe9;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-title svg {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+    }
+
+    .item-row {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      border-bottom: 1px solid #f5f4f0;
+    }
+
+    .item-row:last-child {
+      border-bottom: none;
+    }
+
+    .item-name {
+      font-size: 14px;
+      flex: 1;
+    }
+
+    .item-price {
+      font-size: 12px;
+      color: #888;
+      margin: 0 12px;
+      min-width: 48px;
+      text-align: right;
+    }
+
+    .qty-ctrl {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .qty-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1px solid #ddd;
+      background: #fafafa;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1a1a1a;
+      transition: background 0.15s;
+    }
+
+    .qty-btn:active {
+      background: #eee;
+    }
+
+    .qty-num {
+      font-size: 15px;
+      font-weight: 500;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .qty-num.nonzero {
+      color: #c0392b;
+    }
+
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-top: 1px solid #eee;
+      padding: 12px 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .bottom-bar-wrap {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border-top: 1px solid #eee;
+      z-index: 40;
+    }
+
+    .bottom-bar-inner {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 12px 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .total-info p {
+      margin: 0;
+    }
+
+    .total-count {
+      font-size: 12px;
+      color: #888;
+    }
+
+    .total-price {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .submit-btn {
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 11px 28px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .submit-btn:active {
+      opacity: 0.8;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a1a1a;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    /* Receipt modal */
+    .modal-bg {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 200;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-bg.show {
+      display: flex;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 20px 20px 0 0;
+      width: 100%;
+      max-width: 600px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 1.5rem;
+    }
+
+    .modal h2 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .receipt-meta {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px dashed #ddd;
+    }
+
+    .receipt-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      padding: 5px 0;
+    }
+
+    .receipt-total {
+      display: flex;
+      justify-content: space-between;
+      font-size: 16px;
+      font-weight: 600;
+      padding-top: 12px;
+      margin-top: 8px;
+      border-top: 1px solid #ddd;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 1.25rem;
+    }
+
+    .modal-btn {
+      flex: 1;
+      padding: 11px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+    }
+
+    .modal-btn.cancel {
+      background: #f0efe9;
+      color: #1a1a1a;
+    }
+
+    .modal-btn.confirm {
+      background: #1a1a1a;
+      color: #fff;
+    }
+
+    @media (max-width: 480px) {
+      .top-fields {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">
+    <h1>🍢 0626 聚餐點餐</h1>
+    <span class="header-summary" id="header-summary"></span>
+  </div>
+
+  <div class="container">
+    <div class="top-fields">
+      <div>
+        <p class="field-label">點餐人姓名</p>
+        <input type="text" id="name-input" placeholder="你的名字">
+      </div>
+      <div>
+        <p class="field-label">桌號</p>
+        <select id="table-select">
+          <option value="">請選擇</option>
+          <option>A1</option>
+          <option>A2</option>
+          <option>A3</option>
+          <option>A4</option>
+          <option>A5</option>
+          <option>A6</option>
+          <option>A7</option>
+          <option>A8</option>
+          <option>A9</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path
+            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3z" />
+        </svg>
+        串燒
+      </div>
+      <div id="group-yakitori"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        燒烤
+      </div>
+      <div id="group-grill"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 6l9-4 9 4v6c0 5-4 9-9 10C7 21 3 17 3 12V6z" />
+        </svg>
+        冷物
+      </div>
+      <div id="group-cold"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2a7 7 0 0 1 7 7c0 4-3 7-7 13C9 16 5 13 5 9a7 7 0 0 1 7-7z" />
+        </svg>
+        揚物
+      </div>
+      <div id="group-fry"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <ellipse cx="12" cy="8" rx="9" ry="4" />
+          <path d="M3 8v8c0 2.2 4 4 9 4s9-1.8 9-4V8" />
+        </svg>
+        炒物
+      </div>
+      <div id="group-stir"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 19h14M5 5h14v8a7 7 0 0 1-14 0V5z" />
+        </svg>
+        主食 / 鍋物 / 湯
+      </div>
+      <div id="group-main"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M8 22h8M12 11v11M5 4h14l-1 7H6L5 4z" />
+        </svg>
+        飲料
+      </div>
+      <div id="group-drink"></div>
+    </div>
+
+    <div style="margin-top: 1rem;">
+      <p class="field-label">備註</p>
+      <textarea id="note" rows="3" placeholder="過敏食材、特殊需求…" style="margin-top: 5px;"></textarea>
+    </div>
+  </div>
+
+  <div class="bottom-bar-wrap">
+    <div class="bottom-bar-inner">
+      <div class="total-info">
+        <p class="total-count">共 <span id="total-items">0</span> 道菜</p>
+        <p class="total-price">NT$ <span id="total-price">0</span></p>
+      </div>
+      <button class="submit-btn" onclick="previewOrder()">確認送出</button>
+    </div>
+  </div>
+
+  <!-- Receipt Preview Modal -->
+  <div class="modal-bg" id="modal-bg" onclick="closeModal(event)">
+    <div class="modal" id="modal">
+      <h2>確認點餐內容</h2>
+      <div class="receipt-meta" id="receipt-meta"></div>
+      <div id="receipt-items"></div>
+      <div class="receipt-total">
+        <span>合計</span>
+        <span>NT$ <span id="receipt-total">0</span></span>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn cancel"
+          onclick="document.getElementById('modal-bg').classList.remove('show')">返回修改</button>
+        <button class="modal-btn confirm" onclick="confirmOrder()">確定送出</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const menu = {
+      yakitori: [
+        { name: "醬燒雞腿肉串", price: 60 }, { name: "鹽烤雞腿肉串", price: 60 },
+        { name: "明太子雞腿肉串", price: 60 }, { name: "蔥鹽雞腿肉串", price: 75 },
+        { name: "醬烤手羽先", price: 90 }, { name: "醬烤雞心串", price: 60 },
+        { name: "醬烤雞皮", price: 55 }, { name: "牛五花青蔥卷串", price: 70 },
+        { name: "鹽烤豚五花", price: 60 }, { name: "味噌豚五花串（微辣）", price: 65 },
+        { name: "醬烤欖桃鴨", price: 70 }, { name: "醬烤鱈魚", price: 130 },
+        { name: "明太子椰瓜", price: 70 }, { name: "椰瓜", price: 60 },
+        { name: "香菇串", price: 60 }, { name: "嫩牛助條", price: 70 },
+        { name: "剌皮辣板雞肉串", price: 65 },
+      ],
+      grill: [
+        { name: "鹽烤松阪豬", price: 210 }, { name: "辣味噌中卷", price: 290 },
+        { name: "鹽烤中卷", price: 280 }, { name: "鹽烤海大蝦（1隻）", price: 140 },
+        { name: "花魚一夜干", price: 320 }, { name: "午魚一夜干", price: 380 },
+        { name: "板醬山藥燒", price: 140 }, { name: "帶皮玉米筍", price: 100 },
+        { name: "豚大腸", price: 220 },
+      ],
+      cold: [
+        { name: "紫蘇梅番茄", price: 150 }, { name: "鹽昆布生高麗", price: 100 },
+        { name: "胡麻生洋蔥", price: 120 }, { name: "鯖魚干露煮", price: 150 },
+        { name: "和風鯖魚肝", price: 180 }, { name: "燉煮牛蒡絲", price: 90 },
+        { name: "京味噌點花生", price: 60 },
+      ],
+      fry: [
+        { name: "手羽先", price: 120 }, { name: "職人手作炸雞", price: 170 },
+        { name: "職人手作起士炸雞", price: 180 }, { name: "咖哩雞軟骨", price: 140 },
+        { name: "廣島牡蠣", price: 220 }, { name: "酥炸海苔中卷", price: 290 },
+        { name: "原味薯條", price: 120 }, { name: "海苔薯條", price: 140 },
+        { name: "芥末薯條", price: 140 }, { name: "咖哩薯條", price: 140 },
+        { name: "塔塔醬炸蝦", price: 260 }, { name: "京都豆腐燒", price: 100 },
+      ],
+      stir: [
+        { name: "季節時蔬", price: 140 }, { name: "椒麻翼板牛", price: 280 },
+        { name: "明太子中卷", price: 320 }, { name: "清酒蛤蜊", price: 220 },
+        { name: "京風味噌牛筋煮", price: 240 }, { name: "白酒辣椒蝦", price: 260 },
+      ],
+      main: [
+        { name: "日式炒烏龍", price: 200 }, { name: "櫻花蝦炒飯", price: 180 },
+        { name: "職人自製蛋黃炒飯", price: 200 }, { name: "特上鰻魚丼飯", price: 300 },
+        { name: "季節海鮮鍋", price: 480 }, { name: "青蔥蛤蜊湯", price: 90 },
+        { name: "鮮魚味噌湯", price: 100 },
+      ],
+      drink: [
+        { name: "雅乃詩 單杯", price: 160 }, { name: "雅乃詩 壺", price: 180 },
+        { name: "柚子酒 單杯", price: 200 }, { name: "梅酒 單杯", price: 220 },
+        { name: "南部美人 300ml 瓶", price: 880 }, { name: "獺祭45 300ml 瓶", price: 980 },
+        { name: "獺祭23 300ml 瓶", price: 1780 },
+      ],
+    };
+
+    const qty = {};
+    let grandTotal = 0;
+    let totalItems = 0;
+
+    function renderGroup(groupId, items) {
+      const el = document.getElementById('group-' + groupId);
+      items.forEach((item, i) => {
+        const key = groupId + '_' + i;
+        qty[key] = 0;
+        const row = document.createElement('div');
+        row.className = 'item-row';
+        row.innerHTML = `
+      <span class="item-name">${item.name}</span>
+      <span class="item-price">$${item.price.toLocaleString()}</span>
+      <div class="qty-ctrl">
+        <button class="qty-btn" onclick="changeQty('${key}',-1,${item.price})">−</button>
+        <span class="qty-num" id="qty-${key}">0</span>
+        <button class="qty-btn" onclick="changeQty('${key}',1,${item.price})">+</button>
+      </div>`;
+        el.appendChild(row);
+      });
+    }
+
+    function changeQty(key, delta, price) {
+      const newQty = Math.max(0, qty[key] + delta);
+      const diff = newQty - qty[key];
+      if (diff === 0) return;
+      qty[key] = newQty;
+      const el = document.getElementById('qty-' + key);
+      el.textContent = newQty;
+      el.className = 'qty-num' + (newQty > 0 ? ' nonzero' : '');
+      grandTotal += diff * price;
+      totalItems += diff;
+      document.getElementById('total-price').textContent = grandTotal.toLocaleString();
+      document.getElementById('total-items').textContent = totalItems;
+      document.getElementById('header-summary').textContent = totalItems > 0 ? `${totalItems} 道菜` : '';
+    }
+
+    function previewOrder() {
+      const name = document.getElementById('name-input').value.trim();
+      const table = document.getElementById('table-select').value;
+      if (!name) { showToast('請輸入點餐人姓名！'); return; }
+      if (!table) { showToast('請選擇桌號！'); return; }
+      if (totalItems === 0) { showToast('請至少選一道菜！'); return; }
+
+      document.getElementById('receipt-meta').innerHTML =
+        `<strong>${name}</strong>　桌號：${table}`;
+
+      const container = document.getElementById('receipt-items');
+      container.innerHTML = '';
+      let total = 0;
+
+      Object.keys(menu).forEach(groupId => {
+        menu[groupId].forEach((item, i) => {
+          const key = groupId + '_' + i;
+          if (qty[key] > 0) {
+            const subtotal = qty[key] * item.price;
+            total += subtotal;
+            const row = document.createElement('div');
+            row.className = 'receipt-item';
+            row.innerHTML = `<span>${item.name} × ${qty[key]}</span><span>$${subtotal.toLocaleString()}</span>`;
+            container.appendChild(row);
+          }
+        });
+      });
+
+      const note = document.getElementById('note').value.trim();
+      if (note) {
+        const noteEl = document.createElement('div');
+        noteEl.style.cssText = 'font-size:13px;color:#888;padding-top:8px;border-top:1px solid #f0efe9;margin-top:8px;';
+        noteEl.textContent = '備註：' + note;
+        container.appendChild(noteEl);
+      }
+
+      document.getElementById('receipt-total').textContent = total.toLocaleString();
+      document.getElementById('modal-bg').classList.add('show');
+    }
+
+    function closeModal(e) {
+      if (e.target === document.getElementById('modal-bg')) {
+        document.getElementById('modal-bg').classList.remove('show');
+      }
+    }
+
+    async function confirmOrder() {
+      document.getElementById('modal-bg').classList.remove('show');
+
+      const name = document.getElementById('name-input').value.trim();
+      const table = document.getElementById('table-select').value;
+      const note = document.getElementById('note').value.trim();
+
+      const items = [];
+      Object.keys(menu).forEach(groupId => {
+        menu[groupId].forEach((item, i) => {
+          const key = groupId + '_' + i;
+          if (qty[key] > 0) {
+            items.push({
+              item: item.name,
+              qty: qty[key],
+              price: item.price,
+              subtotal: qty[key] * item.price
+            });
+          }
+        });
+      });
+
+      const payload = {
+        name,
+        table,
+        note,
+        totalItems,
+        grandTotal,
+        items,
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        const res = await fetch(GAS_WEBAPP_URL, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+
+        const result = await res.text();
+        showToast(`✓ ${name}（${table}）點餐已送出！`);
+      } catch (err) {
+        console.error(err);
+        showToast('送出失敗，請檢查 Apps Script 設定');
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.opacity = '1';
+      setTimeout(() => t.style.opacity = '0', 2800);
+    }
+
+
+    const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzfE3nKCKYqleqHy56ULZK-Vka6ZelbeIgnRYrYnFE7k8CwYF4MHAUFLH9vy8UpN9NO/exec";
+
+    Object.keys(menu).forEach(k => renderGroup(k, menu[k]));
+  </script>
+</body>
+
+</html>
