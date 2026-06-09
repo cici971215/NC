@@ -647,18 +647,22 @@
         items,
         createdAt: new Date().toISOString()
       };
-
       try {
-        const res = await fetch(GAS_WEBAPP_URL, {
-          method: 'POST',
+
+        await fetch(GAS_WEBAPP_URL, {
+          method: "POST",
+          mode: "no-cors",
           body: JSON.stringify(payload)
         });
 
-        const result = await res.text();
         showToast(`✓ ${name}（${table}）點餐已送出！`);
+
       } catch (err) {
+
         console.error(err);
-        showToast('送出失敗，請檢查 Apps Script 設定');
+
+        showToast("送出失敗，請檢查 Apps Script 設定");
+
       }
     }
 
