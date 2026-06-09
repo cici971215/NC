@@ -639,32 +639,33 @@
       });
 
       const payload = {
-        name,
-        table,
-        note,
-        totalItems,
-        grandTotal,
-        items,
-        createdAt: new Date().toISOString()
-      };
-      try {
+  name,
+  table,
+  note,
+  totalItems,
+  grandTotal,
+  items,
+  createdAt: new Date().toISOString()
+};
 
-        await fetch(GAS_WEBAPP_URL, {
-          method: "POST",
-          mode: "no-cors",
-          body: JSON.stringify(payload)
-        });
+try {
 
-        showToast(`✓ ${name}（${table}）點餐已送出！`);
+  await fetch(GAS_WEBAPP_URL, {
+    method: "POST",
+    mode: "no-cors",
+    body: JSON.stringify(payload)
+  });
 
-      } catch (err) {
+  showToast(`✓ ${name}（${table}）點餐已送出！`);
 
-        console.error(err);
+} catch (err) {
 
-        showToast("送出失敗，請檢查 Apps Script 設定");
+  console.error(err);
 
-      }
-    }
+  showToast("送出失敗，請檢查 Apps Script 設定");
+
+}
+}
 
     function showToast(msg) {
       const t = document.getElementById('toast');
